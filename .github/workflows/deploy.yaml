@@ -35,3 +35,5 @@ jobs:
           docker pull nishantkatare/python-app:latest
           docker run -d -p 8000:8000 --restart always --name python-app nishantkatare/python-app:latest
         EOF
+
+#- --- IGNORE ---
