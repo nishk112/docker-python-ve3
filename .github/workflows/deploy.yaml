@@ -20,18 +20,18 @@ jobs:
         docker build -t nishantkatare/python-app:latest .
         docker push nishantkatare/python-app:latest
 
-    - name: Deploy on EC2
-      uses: appleboy/ssh-action@v1
+    - name: Start SSH Agent
+      uses: webfactory/ssh-agent@v0.9.0
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.EC2_KEY }}
-        script: |
-          docker pull nishantkatare/python-app:latest
+        ssh-private-key: |
+          ${{ secrets.EC2_KEY }}
+
+    - name: Deploy on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+          docker ps
           docker stop python-app || true
           docker rm python-app || true
-          docker run -d \
-            -p 8000:8000 \
-            --restart always \
-            --name python-app \
-            nishantkatare/python-app:latest
+          docker pull nishantkatare/python-app:latest
+          docker run -d -p 8000:8000 --restart always --name python-app nishantkatare/python-app:latest
+        EOF
