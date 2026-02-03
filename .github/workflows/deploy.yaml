@@ -1,0 +1,37 @@
+name: Deploy Python App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Build & Push (replace image)
+      run: |
+        docker build -t nishantkatare/python-app:latest .
+        docker push nishantkatare/python-app:latest
+
+    - name: Deploy on EC2
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          docker pull nishantkatare/python-app:latest
+          docker stop python-app || true
+          docker rm python-app || true
+          docker run -d \
+            -p 8000:8000 \
+            --restart always \
+            --name python-app \
+            nishantkatare/python-app:latest
