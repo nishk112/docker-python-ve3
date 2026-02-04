@@ -47,4 +47,3 @@ jobs:
           docker run -d -p 8000:8000 --restart always --name python-app nishantkatare/python-app:latest
         EOF
 
-#- --- IGNORE ---
