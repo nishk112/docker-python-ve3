@@ -5,8 +5,19 @@ on:
     branches: [ main ]
 
 jobs:
+  approval:
+    name: Manual Approval
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 2
+
+    steps:
+      - name: Waiting for approval
+        run: |
+          echo "Waiting for manual approval..."  
   deploy:
     runs-on: ubuntu-latest
+    needs: approval
 
     steps:
     - name: Checkout
