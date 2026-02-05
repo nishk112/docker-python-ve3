@@ -1,0 +1,32 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_DEFAULT_REGION: ap-south-1
+    ECR_REPO: 128638576339.dkr.ecr.ap-south-1.amazonaws.com/python-eks-app
+    CLUSTER_NAME: my-modular-eks-cluster
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging into ECR
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 128638576339.dkr.ecr.ap-south-1.amazonaws.com
+      - IMAGE_TAG=latest
+
+  build:
+    commands:
+      - echo Building Docker Image
+      - docker build -t python-app .
+      - docker tag python-app:latest $ECR_REPO:$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo Pushing Image to ECR
+      - docker push $ECR_REPO:$IMAGE_TAG
+
+      - echo Updating kubeconfig
+      - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $CLUSTER_NAME
+
+      - echo Deploying to EKS
+      - kubectl apply -f deployment.yaml
+      - kubectl apply -f service.yaml
